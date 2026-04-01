@@ -65,7 +65,7 @@ Notes:
 - If `GNEWS_API_KEY` is missing, the project still works with fallback content.
 - If `GROQ_API_KEY` is missing, the project still works without AI enrichment.
 
-## How We Designed It
+## Design
 
 The product was designed as a real-world unified recommendation layer instead of a single-platform recommender. The core idea is that people do not consume only one format. Someone interested in technology may want a news article, a podcast episode, a documentary, a music playlist for focus, and a video in the same session. So the product was designed around:
 
