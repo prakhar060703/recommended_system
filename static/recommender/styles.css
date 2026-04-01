@@ -144,7 +144,7 @@ a { color: inherit; text-decoration: none; }
 .horizontal-scroll {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(260px, 320px);
+    grid-auto-columns: minmax(220px, 252px);
     gap: 16px;
     overflow-x: auto;
     padding-bottom: 8px;
@@ -164,7 +164,7 @@ a { color: inherit; text-decoration: none; }
     margin-bottom: 14px;
     background: rgba(255,255,255,0.35);
 }
-.card-image { height: 180px; }
+.card-image { height: 140px; }
 .social-image { height: 140px; }
 .detail-image { max-height: 360px; margin-top: 18px; }
 .social-card {
@@ -183,7 +183,33 @@ a { color: inherit; text-decoration: none; }
     overflow: hidden;
 }
 .wide-card { min-height: 260px; }
-.content-card h4, .social-card h4 { margin: 10px 0 8px; font-size: 1.2rem; }
+.compact-card {
+    min-height: 322px;
+    padding: 14px;
+    border-radius: 20px;
+    box-shadow: 0 12px 34px rgba(31, 51, 72, 0.1);
+}
+.content-card h4, .social-card h4 { margin: 10px 0 8px; font-size: 1.04rem; line-height: 1.25; }
+.card-body {
+    display: grid;
+    gap: 8px;
+}
+.meta-stack {
+    display: grid;
+    gap: 2px;
+    font-size: 0.88rem;
+    color: var(--muted);
+}
+.ai-note {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #354052;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
 .reason-row {
     display: flex;
     gap: 8px;
@@ -207,6 +233,19 @@ a { color: inherit; text-decoration: none; }
     padding: 6px 10px;
     border-radius: 999px;
     background: rgba(255,255,255,0.5);
+}
+.mini-metrics {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 8px;
+}
+.mini-metrics span {
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.42);
 }
 .reason-row span, .domain-pill, .score-pill {
     padding: 6px 10px;
@@ -238,6 +277,17 @@ button:hover, .primary-btn:hover { background: var(--accent-dark); }
     border-top: 1px solid var(--line);
     display: grid;
     gap: 6px;
+}
+.related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+.related-card {
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 14px;
+    background: rgba(255,255,255,0.42);
 }
 .compact-item:first-child, .timeline-item:first-child { border-top: none; padding-top: 0; }
 .filter-bar input, .filter-bar select, .profile-form input, .profile-form select {

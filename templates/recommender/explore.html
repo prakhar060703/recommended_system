@@ -18,7 +18,7 @@
 
     <div class="card-list">
         {% for entry in scored_items %}
-            <article class="content-card theme-{{ entry.item.card_theme }}">
+            <article class="content-card compact-card theme-{{ entry.item.card_theme }}">
                 {% if entry.item.image_url %}
                     <img src="{{ entry.item.image_url }}" alt="{{ entry.item.title }}" class="card-image">
                 {% endif %}
@@ -26,17 +26,23 @@
                     <span class="domain-pill">{{ entry.item.get_domain_display }}</span>
                     <span class="score-pill">#{{ entry.item.provider_rank }}</span>
                 </div>
-                <h4><a href="{% url 'content_detail' entry.item.id %}">{{ entry.item.title }}</a></h4>
-                <p>{{ entry.item.description }}</p>
-                <div class="meta-row">
-                    <span>{{ entry.item.source }}</span>
-                    <span>{{ entry.item.creator }}</span>
-                    <span>{{ entry.item.duration_label }}</span>
+                <div class="card-body">
+                    <h4><a href="{% url 'content_detail' entry.item.id %}">{{ entry.item.title }}</a></h4>
+                    <div class="meta-stack">
+                        <span>{{ entry.item.creator }}</span>
+                        <span>{{ entry.item.genre|title }} • {{ entry.item.source }}</span>
+                    </div>
+                    {% if entry.item.ai_recommendation_note %}
+                        <p class="ai-note">AI pick: {{ entry.item.ai_recommendation_note }}</p>
+                    {% elif entry.item.ai_summary %}
+                        <p class="ai-note">{{ entry.item.ai_summary }}</p>
+                    {% else %}
+                        <p class="ai-note">{{ entry.item.description|truncatechars:88 }}</p>
+                    {% endif %}
                 </div>
-                <div class="metrics-row">
-                    <span>Likes {{ entry.item.provider_like_count }}</span>
-                    <span>Views {{ entry.item.provider_view_count }}</span>
-                    <span>Saves {{ entry.item.provider_save_count }}</span>
+                <div class="mini-metrics">
+                    <span>{{ entry.item.provider_view_count }} views</span>
+                    <span>{{ entry.item.provider_like_count }} likes</span>
                 </div>
             </article>
         {% empty %}

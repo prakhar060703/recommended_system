@@ -5,7 +5,7 @@
     <div>
         <span class="domain-pill">{{ content.get_domain_display }}</span>
         <h2>{{ content.title }}</h2>
-        <p>{{ content.description }}</p>
+        <p>{% if content.ai_summary %}{{ content.ai_summary }}{% else %}{{ content.description }}{% endif %}</p>
         {% if content.image_url %}
             <img src="{{ content.image_url }}" alt="{{ content.title }}" class="detail-image">
         {% endif %}
@@ -21,18 +21,11 @@
             <span>Views {{ content.provider_view_count }}</span>
             <span>Saves {{ content.provider_save_count }}</span>
         </div>
-        {% if content.ai_topics %}
-            <div class="metrics-row">
-                {% for topic in content.ai_topic_list %}
-                    <span>{{ topic }}</span>
-                {% endfor %}
-            </div>
-        {% endif %}
     </div>
     <div class="detail-panel">
         <strong>{{ detail_score }}</strong>
         <span>recommendation score</span>
-        {% if content.ai_recommendation_note %}<small>{{ content.ai_recommendation_note }}</small>{% endif %}
+        {% if content.ai_recommendation_note %}<small>AI note: {{ content.ai_recommendation_note }}</small>{% endif %}
         {% for reason in detail_reasons %}<small>{{ reason }}</small>{% endfor %}
     </div>
 </section>
@@ -50,12 +43,27 @@
     </div>
 
     <div class="panel">
-        <div class="section-head"><div><p class="eyebrow">Related Picks</p><h3>Because you might stay in this lane</h3></div></div>
+        <div class="section-head"><div><p class="eyebrow">AI Tags</p><h3>What this content is about</h3></div></div>
+        {% if content.ai_topics %}
+            <div class="metrics-row">
+                {% for topic in content.ai_topic_list %}
+                    <span>{{ topic }}</span>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No AI topic labels available yet.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-head"><div><p class="eyebrow">Related Picks</p><h3>Because you might stay in this lane</h3></div></div>
+    <div class="related-grid">
         {% for entry in related_items %}
-            <div class="compact-item">
+            <div class="compact-item related-card">
                 <span class="domain-pill">{{ entry.item.get_domain_display }}</span>
                 <a href="{% url 'content_detail' entry.item.id %}">{{ entry.item.title }}</a>
-                <small>{{ entry.item.genre|title }} • {{ entry.score }}</small>
+                <small>{{ entry.item.genre|title }} | {{ entry.score }}</small>
             </div>
         {% empty %}
             <p>No related items available yet.</p>

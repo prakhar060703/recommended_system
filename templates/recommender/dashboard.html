@@ -5,7 +5,7 @@
     <div>
         <p class="eyebrow">{% if request.user.is_authenticated %}Personalized across every format{% else %}Global recommendation feed{% endif %}</p>
         <h2>{% if request.user.is_authenticated %}Your personalized media universe{% else %}One smart feed for everything worth watching, hearing, and reading{% endif %}</h2>
-        <p>{% if request.user.is_authenticated %}Your feed now adapts to your taste, mood, feedback, and preferred content formats across music, videos, podcasts, movies, and news.{% else %}Explore the best cross-domain recommendations first, then log in to unlock a feed shaped by your own interests and behavior.{% endif %}</p>
+        <p>{% if request.user.is_authenticated %}AI-assisted recommendations blend your interests, behavior, and cross-domain similarity across music, videos, podcasts, movies, and news.{% else %}Explore the best cross-domain recommendations first, then log in to unlock a feed shaped by your own interests, behavior, and AI-assisted matching.{% endif %}</p>
     </div>
     <div class="hero-panel">
         <div><strong>{{ featured_items|length }}</strong><span>featured signals</span></div>
@@ -25,7 +25,7 @@
         </div>
         <div class="horizontal-scroll">
             {% for entry in section.items %}
-                <article class="content-card wide-card theme-{{ entry.item.card_theme }}">
+                <article class="content-card compact-card theme-{{ entry.item.card_theme }}">
                     {% if entry.item.image_url %}
                         <img src="{{ entry.item.image_url }}" alt="{{ entry.item.title }}" class="card-image">
                     {% endif %}
@@ -33,23 +33,28 @@
                         <span class="domain-pill">{{ entry.item.get_domain_display }}</span>
                         <span class="score-pill">#{{ entry.item.provider_rank }}</span>
                     </div>
-                    <h4><a href="{% url 'content_detail' entry.item.id %}">{{ entry.item.title }}</a></h4>
-                    <p>{{ entry.item.description }}</p>
-                    <div class="meta-row">
-                        <span>{{ entry.item.creator }}</span>
-                        <span>{{ entry.item.source }}</span>
-                        <span>{{ entry.item.genre|title }}</span>
+                    <div class="card-body">
+                        <h4><a href="{% url 'content_detail' entry.item.id %}">{{ entry.item.title }}</a></h4>
+                        <div class="meta-stack">
+                            <span>{{ entry.item.creator }}</span>
+                            <span>{{ entry.item.genre|title }} • {{ entry.item.source }}</span>
+                        </div>
+                        {% if entry.item.ai_recommendation_note %}
+                            <p class="ai-note">AI pick: {{ entry.item.ai_recommendation_note }}</p>
+                        {% elif entry.item.ai_summary %}
+                            <p class="ai-note">{{ entry.item.ai_summary }}</p>
+                        {% else %}
+                            <p class="ai-note">{{ entry.item.description|truncatechars:88 }}</p>
+                        {% endif %}
                     </div>
-                    <div class="metrics-row">
-                        <span>Likes {{ entry.item.provider_like_count }}</span>
-                        <span>Views {{ entry.item.provider_view_count }}</span>
-                        <span>Saves {{ entry.item.provider_save_count }}</span>
+                    <div class="mini-metrics">
+                        <span>{{ entry.item.provider_view_count }} views</span>
+                        <span>{{ entry.item.provider_like_count }} likes</span>
                     </div>
                     <div class="action-row">
-                        <a href="{% url 'content_detail' entry.item.id %}" class="ghost-btn link-btn">Open</a>
+                        <a href="{% url 'content_detail' entry.item.id %}" class="ghost-btn link-btn">View</a>
                         {% if request.user.is_authenticated %}
                             <form method="post" action="{% url 'interact' entry.item.id 'liked' %}">{% csrf_token %}<button type="submit">Like</button></form>
-                            <form method="post" action="{% url 'interact' entry.item.id 'saved' %}">{% csrf_token %}<button type="submit">Save</button></form>
                         {% else %}
                             <a href="{% url 'login' %}" class="primary-btn link-btn">Login to personalize</a>
                         {% endif %}
