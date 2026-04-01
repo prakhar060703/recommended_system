@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class UserProfile(models.Model):
@@ -13,6 +15,13 @@ class UserProfile(models.Model):
         ("deep", "Deep dive"),
     ]
 
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile",
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=120, default="Guest")
     favorite_domains = models.CharField(max_length=200, blank=True)
     favorite_genres = models.CharField(max_length=300, blank=True)
@@ -23,7 +32,7 @@ class UserProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.name
+        return self.name or (self.user.username if self.user else "Profile")
 
     def domain_list(self):
         return [item.strip() for item in self.favorite_domains.split(",") if item.strip()]
@@ -41,24 +50,40 @@ class ContentItem(models.Model):
         ("news", "News"),
     ]
 
+    provider = models.CharField(max_length=40, default="internal")
+    provider_content_id = models.CharField(max_length=200, blank=True)
     domain = models.CharField(max_length=20, choices=DOMAIN_CHOICES)
     title = models.CharField(max_length=200)
     creator = models.CharField(max_length=150)
     source = models.CharField(max_length=120)
+    external_url = models.URLField(blank=True)
+    image_url = models.URLField(blank=True)
     genre = models.CharField(max_length=120)
     moods = models.CharField(max_length=200, blank=True)
     description = models.TextField()
     duration_label = models.CharField(max_length=40, blank=True)
     release_year = models.PositiveIntegerField(default=2024)
     published_at = models.DateField()
+    fetched_at = models.DateTimeField(default=timezone.now)
+    keyword_blob = models.CharField(max_length=300, blank=True)
+    ai_summary = models.TextField(blank=True)
+    ai_topics = models.CharField(max_length=300, blank=True)
+    ai_mood = models.CharField(max_length=80, blank=True)
+    ai_recommendation_note = models.CharField(max_length=220, blank=True)
+    raw_payload = models.JSONField(default=dict, blank=True)
+    provider_like_count = models.PositiveIntegerField(default=0)
+    provider_view_count = models.PositiveIntegerField(default=0)
+    provider_save_count = models.PositiveIntegerField(default=0)
+    provider_rank = models.PositiveIntegerField(default=0)
     popularity_score = models.FloatField(default=50)
     quality_score = models.FloatField(default=50)
+    recommendation_score = models.FloatField(default=0)
     cross_domain_tags = models.CharField(max_length=250, blank=True)
     card_theme = models.CharField(max_length=80, default="sunrise")
     is_featured = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ["-is_featured", "-popularity_score", "-published_at"]
+        ordering = ["domain", "provider_rank", "-recommendation_score", "-published_at"]
 
     def __str__(self):
         return f"{self.title} ({self.domain})"
@@ -68,6 +93,12 @@ class ContentItem(models.Model):
 
     def tag_list(self):
         return [item.strip() for item in self.cross_domain_tags.split(",") if item.strip()]
+
+    def keyword_list(self):
+        return [item.strip() for item in self.keyword_blob.split(",") if item.strip()]
+
+    def ai_topic_list(self):
+        return [item.strip() for item in self.ai_topics.split(",") if item.strip()]
 
 
 class UserInteraction(models.Model):
@@ -88,5 +119,14 @@ class UserInteraction(models.Model):
 
     def __str__(self):
         return f"{self.profile} - {self.action} - {self.content}"
+
+
+class SyncState(models.Model):
+    key = models.CharField(max_length=100, unique=True)
+    last_run_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    def __str__(self):
+        return self.key
 
 # Create your models here.

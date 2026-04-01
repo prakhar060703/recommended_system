@@ -1,0 +1,29 @@
+{% extends "recommender/base.html" %}
+
+{% block content %}
+<section class="panel auth-panel">
+    <div class="auth-layout">
+        <div class="auth-copy-panel">
+            <p class="eyebrow">Login For Personalized Recommendations</p>
+            <h2>Your taste deserves more than generic feeds</h2>
+            <p>Sign in to unlock recommendations tuned to your favorite formats, genres, mood, and feedback history.</p>
+        </div>
+        <form method="post" class="profile-form auth-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="field">
+                <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username }}
+                {{ form.username.errors }}
+            </div>
+            <div class="field">
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                {{ form.password }}
+                {{ form.password.errors }}
+            </div>
+            <button type="submit" class="primary-btn">Login</button>
+            <p class="helper-copy">No account yet? <a href="{% url 'signup' %}">Create one here</a>.</p>
+        </form>
+    </div>
+</section>
+{% endblock %}

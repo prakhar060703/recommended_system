@@ -3,77 +3,89 @@
 {% block content %}
 <section class="hero">
     <div>
-        <p class="eyebrow">Personalized across every format</p>
-        <h2>Your cross-domain media cockpit</h2>
-        <p>ConvergeIQ studies what you enjoy across formats and turns that into a single recommendation stream instead of five disconnected feeds.</p>
+        <p class="eyebrow">{% if request.user.is_authenticated %}Personalized across every format{% else %}Global recommendation feed{% endif %}</p>
+        <h2>{% if request.user.is_authenticated %}Your personalized media universe{% else %}One smart feed for everything worth watching, hearing, and reading{% endif %}</h2>
+        <p>{% if request.user.is_authenticated %}Your feed now adapts to your taste, mood, feedback, and preferred content formats across music, videos, podcasts, movies, and news.{% else %}Explore the best cross-domain recommendations first, then log in to unlock a feed shaped by your own interests and behavior.{% endif %}</p>
     </div>
     <div class="hero-panel">
-        <div><strong>{{ recommendations|length }}</strong><span>smart picks today</span></div>
-        <div><strong>{{ stats.liked|default:0 }}</strong><span>items liked</span></div>
-        <div><strong>{{ stats.saved|default:0 }}</strong><span>saved for later</span></div>
+        <div><strong>{{ featured_items|length }}</strong><span>featured signals</span></div>
+        <div><strong>{% if request.user.is_authenticated %}{{ stats.liked|default:0 }}{% else %}5{% endif %}</strong><span>{% if request.user.is_authenticated %}items liked{% else %}domains covered{% endif %}</span></div>
+        <div><strong>{% if request.user.is_authenticated %}{{ stats.saved|default:0 }}{% else %}1{% endif %}</strong><span>{% if request.user.is_authenticated %}saved for later{% else %}single interface{% endif %}</span></div>
     </div>
 </section>
 
-<section class="grid-two">
-    <div class="panel">
+{% for section in home_sections %}
+    <section class="panel domain-panel">
         <div class="section-head">
-            <div><p class="eyebrow">Featured Mix</p><h3>Curated highlights</h3></div>
-            <a href="{% url 'explore' %}">Explore all</a>
+            <div>
+                <p class="eyebrow">{% if request.user.is_authenticated %}Personalized {{ section.label }}{% else %}Global {{ section.label }}{% endif %}</p>
+                <h3>{{ section.label }}</h3>
+            </div>
+            <a href="{% url 'explore' %}?domain={{ section.domain }}">See all</a>
         </div>
-        <div class="card-list">
-            {% for entry in recommendations %}
-                <article class="content-card theme-{{ entry.item.card_theme }}">
+        <div class="horizontal-scroll">
+            {% for entry in section.items %}
+                <article class="content-card wide-card theme-{{ entry.item.card_theme }}">
+                    {% if entry.item.image_url %}
+                        <img src="{{ entry.item.image_url }}" alt="{{ entry.item.title }}" class="card-image">
+                    {% endif %}
                     <div class="card-top">
                         <span class="domain-pill">{{ entry.item.get_domain_display }}</span>
-                        <span class="score-pill">{{ entry.score }}</span>
+                        <span class="score-pill">#{{ entry.item.provider_rank }}</span>
                     </div>
                     <h4><a href="{% url 'content_detail' entry.item.id %}">{{ entry.item.title }}</a></h4>
                     <p>{{ entry.item.description }}</p>
                     <div class="meta-row">
                         <span>{{ entry.item.creator }}</span>
-                        <span>{{ entry.item.duration_label }}</span>
+                        <span>{{ entry.item.source }}</span>
                         <span>{{ entry.item.genre|title }}</span>
                     </div>
-                    <div class="reason-row">
-                        {% for reason in entry.reasons %}<span>{{ reason }}</span>{% endfor %}
+                    <div class="metrics-row">
+                        <span>Likes {{ entry.item.provider_like_count }}</span>
+                        <span>Views {{ entry.item.provider_view_count }}</span>
+                        <span>Saves {{ entry.item.provider_save_count }}</span>
                     </div>
                     <div class="action-row">
-                        <form method="post" action="{% url 'interact' entry.item.id 'liked' %}">{% csrf_token %}<button type="submit">Like</button></form>
-                        <form method="post" action="{% url 'interact' entry.item.id 'saved' %}">{% csrf_token %}<button type="submit">Save</button></form>
-                        <form method="post" action="{% url 'interact' entry.item.id 'viewed' %}">{% csrf_token %}<button type="submit">Viewed</button></form>
+                        <a href="{% url 'content_detail' entry.item.id %}" class="ghost-btn link-btn">Open</a>
+                        {% if request.user.is_authenticated %}
+                            <form method="post" action="{% url 'interact' entry.item.id 'liked' %}">{% csrf_token %}<button type="submit">Like</button></form>
+                            <form method="post" action="{% url 'interact' entry.item.id 'saved' %}">{% csrf_token %}<button type="submit">Save</button></form>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="primary-btn link-btn">Login to personalize</a>
+                        {% endif %}
                     </div>
                 </article>
+            {% empty %}
+                <p>No recommendations available in this section yet.</p>
             {% endfor %}
         </div>
+    </section>
+{% endfor %}
+
+<section class="panel social-panel">
+    <div class="section-head">
+        <div><p class="eyebrow">Trending Topic on Social Media</p><h3>What people are talking about right now</h3></div>
     </div>
-
-    <div class="stack">
-        <div class="panel">
-            <div class="section-head"><div><p class="eyebrow">Signal Snapshot</p><h3>Profile intelligence</h3></div></div>
-            <div class="stat-blocks">
-                <div class="mini-stat"><span>Favorite formats</span><strong>{{ profile.favorite_domains|default:"Not set" }}</strong></div>
-                <div class="mini-stat"><span>Favorite genres</span><strong>{{ profile.favorite_genres|default:"Not set" }}</strong></div>
-                <div class="mini-stat"><span>Mood</span><strong>{{ profile.current_mood|default:"Any" }}</strong></div>
-                <div class="mini-stat"><span>Time budget</span><strong>{{ profile.get_time_budget_display }}</strong></div>
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="section-head"><div><p class="eyebrow">Trending News</p><h3>Fresh context</h3></div></div>
-            {% for item in trending_news %}
-                <div class="compact-item">
-                    <span class="domain-pill">{{ item.get_domain_display }}</span>
-                    <a href="{% url 'content_detail' item.id %}">{{ item.title }}</a>
-                    <small>{{ item.source }} • {{ item.duration_label }}</small>
+    <div class="social-strip">
+        {% for topic in social_topics %}
+            <article class="social-card">
+                {% if topic.image_url %}
+                    <img src="{{ topic.image_url }}" alt="{{ topic.name }}" class="card-image social-image">
+                {% endif %}
+                <div class="card-top">
+                    <span class="domain-pill">Trending</span>
+                    <span class="score-pill">#{{ topic.rank }}</span>
                 </div>
-            {% endfor %}
-        </div>
-
-        <div class="panel accent-panel">
-            <p class="eyebrow">Problem Fit</p>
-            <h3>Why this product stands out</h3>
-            <p>Instead of recommending only inside one platform, ConvergeIQ uses shared preferences like mood, topic, time budget, and discovery behavior to bridge multiple content ecosystems in one usable flow.</p>
-        </div>
+                <h4>{{ topic.name }}</h4>
+                <p>{{ topic.pulse }}</p>
+                <small>{{ topic.volume }}</small>
+                {% if topic.link %}
+                    <div class="action-row">
+                        <a href="{{ topic.link }}" target="_blank" rel="noopener noreferrer" class="ghost-btn link-btn">Read trend</a>
+                    </div>
+                {% endif %}
+            </article>
+        {% endfor %}
     </div>
 </section>
 {% endblock %}

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ContentItem, UserInteraction, UserProfile
+from .models import ContentItem, SyncState, UserInteraction, UserProfile
 
 
 @admin.register(UserProfile)
@@ -11,14 +11,19 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ContentItem)
 class ContentItemAdmin(admin.ModelAdmin):
-    list_display = ("title", "domain", "genre", "source", "popularity_score", "is_featured")
-    list_filter = ("domain", "genre", "is_featured")
-    search_fields = ("title", "creator", "source", "description")
+    list_display = ("title", "domain", "provider", "source", "provider_rank", "recommendation_score", "published_at")
+    list_filter = ("domain", "genre", "provider", "is_featured")
+    search_fields = ("title", "creator", "source", "description", "keyword_blob")
 
 
 @admin.register(UserInteraction)
 class UserInteractionAdmin(admin.ModelAdmin):
     list_display = ("profile", "content", "action", "created_at")
     list_filter = ("action", "content__domain")
+
+
+@admin.register(SyncState)
+class SyncStateAdmin(admin.ModelAdmin):
+    list_display = ("key", "last_run_at")
 
 # Register your models here.

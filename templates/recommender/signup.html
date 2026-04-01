@@ -1,0 +1,41 @@
+{% extends "recommender/base.html" %}
+
+{% block content %}
+<section class="panel auth-panel">
+    <div class="auth-layout">
+        <div class="auth-copy-panel">
+            <p class="eyebrow">Fast Sign Up</p>
+            <h2>Create your account in seconds</h2>
+            <p>We will ask about your taste on the next screen, so you only need the basics here.</p>
+        </div>
+        <form method="post" class="profile-form auth-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="field">
+                <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username }}
+                {{ form.username.errors }}
+            </div>
+            <div class="field">
+                <label for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email }}
+                {{ form.email.errors }}
+            </div>
+            <div class="field">
+                <label for="{{ form.password1.id_for_label }}">Password</label>
+                {{ form.password1 }}
+                {{ form.password1.errors }}
+                {% if form.password1.help_text %}
+                    <small class="helper-copy">{{ form.password1.help_text|safe }}</small>
+                {% endif %}
+            </div>
+            <div class="field">
+                <label for="{{ form.password2.id_for_label }}">Confirm password</label>
+                {{ form.password2 }}
+                {{ form.password2.errors }}
+            </div>
+            <button type="submit" class="primary-btn">Continue</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

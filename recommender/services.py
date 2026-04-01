@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 from datetime import date
+from math import log, sqrt
 
 from .models import ContentItem, UserInteraction
 
@@ -25,22 +26,122 @@ class RecommendationService:
         self.affinity_tags = Counter()
         for item in liked_items:
             self.affinity_tags.update(item.tag_list())
+        self.all_items = list(ContentItem.objects.all())
+        self.idf = self._build_idf()
+        self.profile_vector = self._build_profile_vector()
+
+    def _tokenize(self, *parts):
+        blocked = {
+            "the", "and", "for", "with", "from", "this", "that", "your", "have", "into", "about",
+            "will", "more", "than", "what", "when", "where", "they", "them", "their", "over",
+        }
+        tokens = []
+        for part in parts:
+            if not part:
+                continue
+            cleaned = "".join(ch.lower() if ch.isalnum() or ch == " " else " " for ch in str(part))
+            tokens.extend(word for word in cleaned.split() if len(word) > 2 and word not in blocked)
+        return tokens
+
+    def _item_tokens(self, item):
+        return self._tokenize(
+            item.title,
+            item.creator,
+            item.source,
+            item.domain,
+            item.genre,
+            item.description,
+            item.keyword_blob,
+            item.ai_topics,
+            item.ai_summary,
+            item.ai_mood,
+            item.cross_domain_tags,
+            item.moods,
+        )
+
+    def _build_idf(self):
+        doc_count = max(len(self.all_items), 1)
+        doc_freq = Counter()
+        for item in self.all_items:
+            doc_freq.update(set(self._item_tokens(item)))
+        return {token: log((1 + doc_count) / (1 + freq)) + 1.0 for token, freq in doc_freq.items()}
+
+    def _vectorize_tokens(self, tokens):
+        term_freq = Counter(tokens)
+        if not term_freq:
+            return {}
+        total_terms = sum(term_freq.values())
+        return {
+            token: (count / total_terms) * self.idf.get(token, 1.0)
+            for token, count in term_freq.items()
+        }
+
+    def _build_profile_vector(self):
+        profile_tokens = self._tokenize(
+            self.profile.favorite_domains,
+            self.profile.favorite_genres,
+            self.profile.current_mood,
+        )
+        for item in self.all_items:
+            if item.id in self.liked_ids:
+                profile_tokens.extend(self._item_tokens(item) * 3)
+            elif item.id in self.saved_ids:
+                profile_tokens.extend(self._item_tokens(item) * 2)
+            elif item.id in self.viewed_ids:
+                profile_tokens.extend(self._item_tokens(item))
+        return self._vectorize_tokens(profile_tokens)
+
+    def _cosine_similarity(self, left, right):
+        if not left or not right:
+            return 0.0
+        overlap = set(left) & set(right)
+        numerator = sum(left[token] * right[token] for token in overlap)
+        left_norm = sqrt(sum(value * value for value in left.values()))
+        right_norm = sqrt(sum(value * value for value in right.values()))
+        if not left_norm or not right_norm:
+            return 0.0
+        return numerator / (left_norm * right_norm)
 
     def score_item(self, item):
-        score = (item.popularity_score * 0.35) + (item.quality_score * 0.4)
+        item_vector = self._vectorize_tokens(self._item_tokens(item))
+        similarity = self._cosine_similarity(self.profile_vector, item_vector)
+        score = (
+            (item.recommendation_score * 0.42)
+            + (item.quality_score * 0.16)
+            + (item.popularity_score * 0.08)
+            + (similarity * 100 * 0.34)
+        )
         reasons = []
 
+        interaction_volume = len(self.liked_ids) + len(self.saved_ids) + len(self.viewed_ids)
+        profile_weight = 1.0 if interaction_volume < 4 else 0.65
+
+        if similarity > 0.18:
+            score += similarity * 22
+            reasons.append("strong content similarity")
+        elif similarity > 0.1:
+            reasons.append("good topical match")
+
         if item.domain in self.profile.domain_list():
-            score += 15
+            score += 9 * profile_weight
             reasons.append("matches a preferred format")
 
         if item.genre in self.profile.genre_list():
-            score += 18
+            score += 11 * profile_weight
             reasons.append("fits your favorite genre")
 
+        matching_keywords = len(set(item.keyword_list()) & set(self.profile.genre_list() + self.profile.domain_list()))
+        if matching_keywords:
+            score += matching_keywords * 5
+            reasons.append("aligned with your interest keywords")
+
         if self.profile.current_mood and self.profile.current_mood in item.mood_list():
-            score += 12
+            score += 7 * profile_weight
             reasons.append("matches your current mood")
+
+        if self.profile.current_mood and item.ai_mood and self.profile.current_mood == item.ai_mood:
+            score += 6
+            reasons.append("ai mood match")
 
         if self.affinity_genres.get(item.genre):
             score += 10 + (self.affinity_genres[item.genre] * 2)
@@ -53,6 +154,8 @@ class RecommendationService:
         if shared_tags:
             score += min(shared_tags * 3, 12)
             reasons.append("connected to themes from your history")
+
+        score += min(item.provider_rank and max(0, 12 - item.provider_rank) or 0, 10)
 
         if self.profile.time_budget == "quick" and any(token in item.duration_label.lower() for token in ["5", "8", "10", "12"]):
             score += 8
@@ -79,10 +182,10 @@ class RecommendationService:
             score -= 40
 
         if self.profile.discovery_mode == "explorer" and item.domain not in self.profile.domain_list():
-            score += 10
+            score += 6 * profile_weight
             reasons.append("adds cross-domain discovery")
         elif self.profile.discovery_mode == "comfort" and item.domain not in self.profile.domain_list():
-            score -= 8
+            score -= 5 * profile_weight
 
         return round(score, 1), reasons[:3]
 

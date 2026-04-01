@@ -2,10 +2,9 @@
 
 {% block content %}
 <section class="panel form-panel">
-    <div class="section-head"><div><p class="eyebrow">Tune Your Engine</p><h2>Personalization setup</h2></div></div>
+    <div class="section-head"><div><p class="eyebrow">Please Tell Us What You Like</p><h2>Choose a few interests to shape your feed</h2></div></div>
     <form method="post" class="profile-form">
         {% csrf_token %}
-        <div class="field"><label for="{{ form.name.id_for_label }}">Name</label>{{ form.name }}</div>
         <div class="field"><label>Favorite domains</label><div class="checkbox-grid">{{ form.favorite_domains }}</div></div>
         <div class="field"><label>Favorite genres</label><div class="checkbox-grid">{{ form.favorite_genres }}</div></div>
         <div class="field-row">
@@ -13,7 +12,8 @@
             <div class="field"><label for="{{ form.time_budget.id_for_label }}">Available time</label>{{ form.time_budget }}</div>
             <div class="field"><label for="{{ form.discovery_mode.id_for_label }}">Discovery mode</label>{{ form.discovery_mode }}</div>
         </div>
-        <button type="submit" class="primary-btn">Save profile</button>
+        <p class="helper-copy">You can change these interests later. ConvergeIQ will adapt gradually, so your feed stays stable while learning your new preferences.</p>
+        <button type="submit" class="primary-btn">Save interests</button>
     </form>
 </section>
 {% endblock %}

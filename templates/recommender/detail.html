@@ -6,16 +6,33 @@
         <span class="domain-pill">{{ content.get_domain_display }}</span>
         <h2>{{ content.title }}</h2>
         <p>{{ content.description }}</p>
+        {% if content.image_url %}
+            <img src="{{ content.image_url }}" alt="{{ content.title }}" class="detail-image">
+        {% endif %}
         <div class="meta-row">
             <span>{{ content.creator }}</span>
             <span>{{ content.source }}</span>
             <span>{{ content.duration_label }}</span>
             <span>{{ content.genre|title }}</span>
         </div>
+        <div class="metrics-row">
+            <span>Rank #{{ content.provider_rank }}</span>
+            <span>Likes {{ content.provider_like_count }}</span>
+            <span>Views {{ content.provider_view_count }}</span>
+            <span>Saves {{ content.provider_save_count }}</span>
+        </div>
+        {% if content.ai_topics %}
+            <div class="metrics-row">
+                {% for topic in content.ai_topic_list %}
+                    <span>{{ topic }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
     <div class="detail-panel">
         <strong>{{ detail_score }}</strong>
         <span>recommendation score</span>
+        {% if content.ai_recommendation_note %}<small>{{ content.ai_recommendation_note }}</small>{% endif %}
         {% for reason in detail_reasons %}<small>{{ reason }}</small>{% endfor %}
     </div>
 </section>
@@ -24,6 +41,7 @@
     <div class="panel">
         <div class="section-head"><div><p class="eyebrow">Take Action</p><h3>Train the recommender</h3></div></div>
         <div class="action-row">
+            {% if content.external_url %}<a href="{{ content.external_url }}" target="_blank" rel="noopener noreferrer" class="ghost-btn link-btn">Go To Real Content</a>{% endif %}
             <form method="post" action="{% url 'interact' content.id 'liked' %}">{% csrf_token %}<button type="submit">Like</button></form>
             <form method="post" action="{% url 'interact' content.id 'saved' %}">{% csrf_token %}<button type="submit">Save</button></form>
             <form method="post" action="{% url 'interact' content.id 'viewed' %}">{% csrf_token %}<button type="submit">Viewed</button></form>

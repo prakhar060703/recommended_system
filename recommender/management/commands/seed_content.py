@@ -2,6 +2,7 @@ from datetime import date
 
 from django.core.management.base import BaseCommand
 
+from recommender.ingestion import assign_domain_ranks, write_snapshot_file
 from recommender.models import ContentItem
 
 
@@ -36,11 +37,24 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         created = 0
         for entry in CONTENT_SEED:
+            payload = {key: (value.isoformat() if hasattr(value, "isoformat") else value) for key, value in entry.items()}
             _, was_created = ContentItem.objects.update_or_create(
                 title=entry["title"],
                 domain=entry["domain"],
-                defaults=entry,
+                defaults={
+                    **entry,
+                    "provider": "seeded",
+                    "provider_content_id": f"{entry['domain']}::{entry['title']}",
+                    "keyword_blob": entry.get("cross_domain_tags", ""),
+                    "provider_like_count": int(entry.get("popularity_score", 0) * 12),
+                    "provider_view_count": int(entry.get("popularity_score", 0) * 220),
+                    "provider_save_count": int(entry.get("quality_score", 0) * 3),
+                    "recommendation_score": round((entry.get("popularity_score", 0) * 0.6) + (entry.get("quality_score", 0) * 0.4), 2),
+                    "raw_payload": payload,
+                },
             )
             if was_created:
                 created += 1
+        assign_domain_ranks()
+        write_snapshot_file()
         self.stdout.write(self.style.SUCCESS(f"Seed complete. {created} new items added, {len(CONTENT_SEED)} total synced."))

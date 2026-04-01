@@ -15,6 +15,7 @@ db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
+data/content_snapshot.json
 
 # Environment and local settings
 .env

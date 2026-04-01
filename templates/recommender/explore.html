@@ -19,9 +19,12 @@
     <div class="card-list">
         {% for entry in scored_items %}
             <article class="content-card theme-{{ entry.item.card_theme }}">
+                {% if entry.item.image_url %}
+                    <img src="{{ entry.item.image_url }}" alt="{{ entry.item.title }}" class="card-image">
+                {% endif %}
                 <div class="card-top">
                     <span class="domain-pill">{{ entry.item.get_domain_display }}</span>
-                    <span class="score-pill">{{ entry.score }}</span>
+                    <span class="score-pill">#{{ entry.item.provider_rank }}</span>
                 </div>
                 <h4><a href="{% url 'content_detail' entry.item.id %}">{{ entry.item.title }}</a></h4>
                 <p>{{ entry.item.description }}</p>
@@ -30,8 +33,10 @@
                     <span>{{ entry.item.creator }}</span>
                     <span>{{ entry.item.duration_label }}</span>
                 </div>
-                <div class="reason-row">
-                    {% for reason in entry.reasons %}<span>{{ reason }}</span>{% empty %}<span>quality cross-domain candidate</span>{% endfor %}
+                <div class="metrics-row">
+                    <span>Likes {{ entry.item.provider_like_count }}</span>
+                    <span>Views {{ entry.item.provider_view_count }}</span>
+                    <span>Saves {{ entry.item.provider_save_count }}</span>
                 </div>
             </article>
         {% empty %}
