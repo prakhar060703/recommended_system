@@ -1,0 +1,42 @@
+{% extends "recommender/base.html" %}
+
+{% block content %}
+<section class="panel">
+    <div class="section-head"><div><p class="eyebrow">Unified Catalog</p><h2>Explore every format</h2></div></div>
+    <form method="get" class="filter-bar">
+        <input type="text" name="q" placeholder="Search title, creator, or topic" value="{{ query }}">
+        <select name="domain">
+            <option value="">All domains</option>
+            {% for value, label in domain_options %}<option value="{{ value }}" {% if value == selected_domain %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        <select name="genre">
+            <option value="">All genres</option>
+            {% for value, label in genre_options %}<option value="{{ value }}" {% if value == selected_genre %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        <button type="submit">Filter</button>
+    </form>
+
+    <div class="card-list">
+        {% for entry in scored_items %}
+            <article class="content-card theme-{{ entry.item.card_theme }}">
+                <div class="card-top">
+                    <span class="domain-pill">{{ entry.item.get_domain_display }}</span>
+                    <span class="score-pill">{{ entry.score }}</span>
+                </div>
+                <h4><a href="{% url 'content_detail' entry.item.id %}">{{ entry.item.title }}</a></h4>
+                <p>{{ entry.item.description }}</p>
+                <div class="meta-row">
+                    <span>{{ entry.item.source }}</span>
+                    <span>{{ entry.item.creator }}</span>
+                    <span>{{ entry.item.duration_label }}</span>
+                </div>
+                <div class="reason-row">
+                    {% for reason in entry.reasons %}<span>{{ reason }}</span>{% empty %}<span>quality cross-domain candidate</span>{% endfor %}
+                </div>
+            </article>
+        {% empty %}
+            <p>No items matched your filters.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

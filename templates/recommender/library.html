@@ -1,0 +1,18 @@
+{% extends "recommender/base.html" %}
+
+{% block content %}
+<section class="panel">
+    <div class="section-head"><div><p class="eyebrow">Feedback Loop</p><h2>Your activity library</h2></div></div>
+    <div class="timeline">
+        {% for interaction in interactions %}
+            <div class="timeline-item">
+                <span class="domain-pill">{{ interaction.action|title }}</span>
+                <a href="{% url 'content_detail' interaction.content.id %}">{{ interaction.content.title }}</a>
+                <small>{{ interaction.content.get_domain_display }} • {{ interaction.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+        {% empty %}
+            <p>You have not interacted with any content yet. Start from the home feed to teach the engine.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

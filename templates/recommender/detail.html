@@ -1,0 +1,47 @@
+{% extends "recommender/base.html" %}
+
+{% block content %}
+<section class="detail-hero theme-{{ content.card_theme }}">
+    <div>
+        <span class="domain-pill">{{ content.get_domain_display }}</span>
+        <h2>{{ content.title }}</h2>
+        <p>{{ content.description }}</p>
+        <div class="meta-row">
+            <span>{{ content.creator }}</span>
+            <span>{{ content.source }}</span>
+            <span>{{ content.duration_label }}</span>
+            <span>{{ content.genre|title }}</span>
+        </div>
+    </div>
+    <div class="detail-panel">
+        <strong>{{ detail_score }}</strong>
+        <span>recommendation score</span>
+        {% for reason in detail_reasons %}<small>{{ reason }}</small>{% endfor %}
+    </div>
+</section>
+
+<section class="grid-two">
+    <div class="panel">
+        <div class="section-head"><div><p class="eyebrow">Take Action</p><h3>Train the recommender</h3></div></div>
+        <div class="action-row">
+            <form method="post" action="{% url 'interact' content.id 'liked' %}">{% csrf_token %}<button type="submit">Like</button></form>
+            <form method="post" action="{% url 'interact' content.id 'saved' %}">{% csrf_token %}<button type="submit">Save</button></form>
+            <form method="post" action="{% url 'interact' content.id 'viewed' %}">{% csrf_token %}<button type="submit">Viewed</button></form>
+            <form method="post" action="{% url 'interact' content.id 'disliked' %}">{% csrf_token %}<button type="submit">Dislike</button></form>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="section-head"><div><p class="eyebrow">Related Picks</p><h3>Because you might stay in this lane</h3></div></div>
+        {% for entry in related_items %}
+            <div class="compact-item">
+                <span class="domain-pill">{{ entry.item.get_domain_display }}</span>
+                <a href="{% url 'content_detail' entry.item.id %}">{{ entry.item.title }}</a>
+                <small>{{ entry.item.genre|title }} • {{ entry.score }}</small>
+            </div>
+        {% empty %}
+            <p>No related items available yet.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

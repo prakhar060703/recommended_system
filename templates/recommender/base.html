@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConvergeIQ</title>
+    <link rel="stylesheet" href="{% static 'recommender/styles.css' %}">
+</head>
+<body>
+    <div class="page-shell">
+        <aside class="sidebar">
+            <div>
+                <p class="eyebrow">Unified Recommendation Platform</p>
+                <h1>ConvergeIQ</h1>
+                <p class="sidebar-copy">One place for videos, music, podcasts, movies, and news with cross-domain intelligence.</p>
+            </div>
+            <nav class="nav-links">
+                <a href="{% url 'dashboard' %}" class="{% if request.path == '/' %}active{% endif %}">Home</a>
+                <a href="{% url 'explore' %}" class="{% if '/explore/' in request.path %}active{% endif %}">Explore</a>
+                <a href="{% url 'library' %}" class="{% if '/library/' in request.path %}active{% endif %}">My Library</a>
+                <a href="{% url 'onboarding' %}" class="{% if '/onboarding/' in request.path %}active{% endif %}">Tune Profile</a>
+            </nav>
+            <div class="profile-chip">
+                <span>{{ profile.name }}</span>
+                <small>{{ profile.discovery_mode|title }} mode</small>
+            </div>
+        </aside>
+        <main class="content-area">
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
